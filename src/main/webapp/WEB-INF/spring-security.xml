@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	   		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+			http://www.springframework.org/schema/security 
+			http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+	
+	<!-- This is where we configure Spring-Security  -->
+	<security:http pattern="/api/**" entry-point-ref="restAuthenticationEntryPoint" use-expressions="true" auto-config="true" create-session="stateless" >
+    
+		<security:intercept-url pattern="/api/userList" access="hasRole('ROLE_USER')"/>
+		<security:intercept-url pattern="/api/managerList" access="hasRole('ROLE_ADMIN')"/>
+		<security:custom-filter ref="preAuthFilter" position="PRE_AUTH_FILTER"/>
+		<!--  <security:custom-filter ref="tokenBasedAuthenticationFilter" position="FORM_LOGIN_FILTER"   /> -->
+	</security:http>
+	
+	<!-- <bean id="tokenBasedAuthenticationFilter" class="com.rest.security.controller.TokenBasedAuthenticationFilter">
+		<property name="authenticationManager" ref="authenticationManager"/>
+		
+	</bean> -->
+	<bean id="preAuthFilter" class=
+"org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter">
+    <property name="principalRequestHeader" value="Authorization"/>
+    <property name="authenticationManager" ref="authenticationManager" />
+  </bean>
+
+  <bean id="preauthAuthProvider"
+class="org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider">
+    <property name="preAuthenticatedUserDetailsService">
+      <bean id="userDetailsServiceWrapper"
+          class="org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper">
+        <property name="userDetailsService" ref="authenticationService"/>
+      </bean>
+    </property>
+    </bean>
+	
+	<!-- Authentication Manger config -->
+	<security:authentication-manager alias="authenticationManager">
+		<security:authentication-provider ref="preauthAuthProvider" />
+	</security:authentication-manager>
+</beans>
